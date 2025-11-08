@@ -10,7 +10,7 @@ import config
 
 def main():
     """Run comprehensive benchmarks and evaluations."""
-    print("🚀 Starting Proactive Daily Assistant Benchmark Suite")
+    print("Starting Proactive Daily Assistant Benchmark Suite")
     print("=" * 60)
     
     # 1. Generate data
@@ -18,7 +18,7 @@ def main():
     generator = DataGenerator()
     data = generator.generate_day_data()
     generator.save_day_data("benchmark_day.json")
-    print(f"   ✓ Generated data with {len(data['calendar'])} calendar events, "
+    print(f"   [OK] Generated data with {len(data['calendar'])} calendar events, "
           f"{len(data['emails'])} emails, {len(data['fitness'])} fitness readings, "
           f"{len(data['music'])} music tracks")
     
@@ -51,7 +51,7 @@ def main():
     
     # Decision: Use vector DB if relevance is significantly better, otherwise KV cache for speed
     use_vector_db = benchmark_results['vector_db']['avg_relevance'] > benchmark_results['kv_cache']['avg_relevance'] * 1.1
-    print(f"   ✓ Decision: Using {'Vector DB' if use_vector_db else 'KV Cache'}")
+    print(f"   [OK] Decision: Using {'Vector DB' if use_vector_db else 'KV Cache'}")
     
     # 3. Run orchestrator benchmarks
     print("\n3. Running orchestrator benchmarks...")
@@ -82,7 +82,7 @@ def main():
             "nudge": result.get("nudge", "")
         })
     
-    print("   ✓ Benchmark complete")
+    print("   [OK] Benchmark complete")
     
     # 4. Generate metrics report
     print("\n4. Generating metrics report...")
@@ -160,15 +160,15 @@ def main():
     comparison_path = os.path.join(config.OUTPUT_DIR, "configuration_comparison.json")
     with open(comparison_path, "w") as f:
         json.dump(comparison, f, indent=2)
-    print(f"\n   ✓ Saved comparison to {comparison_path}")
+    print(f"\n   [OK] Saved comparison to {comparison_path}")
     
     # 7. Export metrics
     csv_path = metrics_tracker.export_metrics_csv()
     print(f"\n7. Exported metrics to {csv_path}")
     
     print("\n" + "=" * 60)
-    print("✅ Benchmark suite complete!")
-    print(f"\n📊 Reports saved to: {config.OUTPUT_DIR}/")
+    print("[OK] Benchmark suite complete!")
+    print(f"\nReports saved to: {config.OUTPUT_DIR}/")
     print(f"   - metrics_report.json")
     print(f"   - metrics.csv")
     print(f"   - configuration_comparison.json")

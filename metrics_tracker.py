@@ -236,8 +236,27 @@ class MetricsTracker:
         
         # Save report
         report_path = os.path.join(self.output_dir, "metrics_report.json")
+        
+        # Convert numpy types to native Python types for JSON serialization
+        def convert_numpy_types(obj):
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            elif isinstance(obj, (np.bool_, bool)):
+                return bool(obj)
+            elif isinstance(obj, dict):
+                return {key: convert_numpy_types(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy_types(item) for item in obj]
+            return obj
+        
+        report_serializable = convert_numpy_types(report)
+        
         with open(report_path, "w") as f:
-            json.dump(report, f, indent=2)
+            json.dump(report_serializable, f, indent=2)
         
         return report
     
