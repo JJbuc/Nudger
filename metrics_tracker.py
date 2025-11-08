@@ -32,13 +32,13 @@ class MetricsTracker:
         breakdowns = [m.get("latency_breakdown", {}) for m in self.metrics]
         
         stats = {
-            "mean": np.mean(latencies),
-            "median": np.median(latencies),
-            "p95": np.percentile(latencies, 95),
-            "p99": np.percentile(latencies, 99),
-            "min": np.min(latencies),
-            "max": np.max(latencies),
-            "std": np.std(latencies)
+            "mean": float(np.mean(latencies)),
+            "median": float(np.median(latencies)),
+            "p95": float(np.percentile(latencies, 95)),
+            "p99": float(np.percentile(latencies, 99)),
+            "min": float(np.min(latencies)),
+            "max": float(np.max(latencies)),
+            "std": float(np.std(latencies))
         }
         
         # Breakdown stats
@@ -50,7 +50,7 @@ class MetricsTracker:
             for component in components:
                 component_latencies = [bd.get(component, 0) for bd in breakdowns if component in bd]
                 if component_latencies:
-                    stats[f"{component}_mean"] = np.mean(component_latencies)
+                    stats[f"{component}_mean"] = float(np.mean(component_latencies))
         
         return stats
     
@@ -71,12 +71,12 @@ class MetricsTracker:
             output_tokens.append(tokens.get("output", 0))
         
         return {
-            "total_cost_usd": sum(costs),
-            "avg_cost_per_query": np.mean(costs) if costs else 0,
-            "total_input_tokens": sum(input_tokens),
-            "total_output_tokens": sum(output_tokens),
-            "avg_input_tokens": np.mean(input_tokens) if input_tokens else 0,
-            "avg_output_tokens": np.mean(output_tokens) if output_tokens else 0
+            "total_cost_usd": float(sum(costs)),
+            "avg_cost_per_query": float(np.mean(costs)) if costs else 0.0,
+            "total_input_tokens": int(sum(input_tokens)),
+            "total_output_tokens": int(sum(output_tokens)),
+            "avg_input_tokens": float(np.mean(input_tokens)) if input_tokens else 0.0,
+            "avg_output_tokens": float(np.mean(output_tokens)) if output_tokens else 0.0
         }
     
     def plot_latency_distribution(self, save_path: str = None):

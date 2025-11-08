@@ -8,8 +8,7 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Model Configuration
-GROQ_MODEL = "llama-3.1-70b-versatile"  # Fast model for low latency
-ON_DEVICE_MODEL = "microsoft/Phi-3-mini-4k-instruct"  # Small model for on-device
+GROQ_MODEL = "llama-3.3-70b-versatile"  # Fast model for low latency
 
 # Performance Targets
 TARGET_LATENCY_MS = 500

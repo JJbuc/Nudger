@@ -28,11 +28,15 @@ except ImportError:
                     if hasattr(msg, 'content'):
                         groq_messages.append({"role": "user", "content": msg.content})
                 
-                response = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=groq_messages,
-                    temperature=self.temperature
-                )
+                try:
+                    response = self.client.chat.completions.create(
+                        model=self.model_name,
+                        messages=groq_messages,
+                        temperature=self.temperature
+                    )
+                except Exception as e:
+                    print(f"ERROR in Groq API call: {e}")
+                    raise
                 
                 # Create a response object with content and metadata
                 class Response:
@@ -40,11 +44,17 @@ except ImportError:
                         self.content = content
                         self.response_metadata = {"usage": usage}
                 
-                usage = {
-                    "prompt_tokens": response.usage.prompt_tokens if hasattr(response, 'usage') else 0,
-                    "completion_tokens": response.usage.completion_tokens if hasattr(response, 'usage') else 0,
-                    "total_tokens": response.usage.total_tokens if hasattr(response, 'usage') else 0
-                }
+                if not hasattr(response, 'usage') or response.usage is None:
+                    usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+                else:
+                    usage = {
+                        "prompt_tokens": response.usage.prompt_tokens,
+                        "completion_tokens": response.usage.completion_tokens,
+                        "total_tokens": response.usage.total_tokens
+                    }
+                
+                if not response.choices or len(response.choices) == 0:
+                    raise ValueError("No response from Groq API")
                 
                 return Response(
                     content=response.choices[0].message.content,
@@ -77,11 +87,20 @@ class LLMOrchestrator:
     """Main orchestrator using LangGraph."""
     
     def __init__(self, use_vector_db: bool = True):
-        self.llm = ChatGroq(
-            groq_api_key=config.GROQ_API_KEY,
-            model_name=config.GROQ_MODEL,
-            temperature=0.7
-        )
+        # Verify API key is set
+        if not config.GROQ_API_KEY or config.GROQ_API_KEY == "" or "your_groq_api_key" in config.GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY not set! Please set it in .env file")
+        
+        try:
+            self.llm = ChatGroq(
+                groq_api_key=config.GROQ_API_KEY,
+                model_name=config.GROQ_MODEL,
+                temperature=0.7
+            )
+        except Exception as e:
+            print(f"ERROR initializing ChatGroq: {e}")
+            raise
+        
         self.context_manager = VectorDBContextManager() if use_vector_db else KVCacheContextManager()
         self.use_vector_db = use_vector_db
         self.graph = self._build_graph()
@@ -190,8 +209,11 @@ Analysis:"""
                 state["cost_tokens"]["output"] += metadata.get("usage", {}).get("completion_tokens", 0)
             
         except Exception as e:
-            state["error"] = f"Analysis error: {str(e)}"
-            state["analysis"] = "Unable to analyze context."
+            import traceback
+            error_msg = f"Analysis error: {str(e)}\n{traceback.format_exc()}"
+            print(f"ERROR in _analyze_context: {error_msg}")  # Debug output
+            state["error"] = error_msg
+            state["analysis"] = f"Unable to analyze context. Error: {str(e)}"
         
         latency_ms = (time.perf_counter() - start_time) * 1000
         state["latency_breakdown"]["analysis"] = latency_ms
@@ -244,12 +266,21 @@ Nudge:"""
             # Track tokens
             if hasattr(response, 'response_metadata'):
                 metadata = response.response_metadata
-                state["cost_tokens"]["input"] += metadata.get("usage", {}).get("prompt_tokens", 0)
-                state["cost_tokens"]["output"] += metadata.get("usage", {}).get("completion_tokens", 0)
+                usage = metadata.get("usage", {})
+                state["cost_tokens"]["input"] += usage.get("prompt_tokens", 0)
+                state["cost_tokens"]["output"] += usage.get("completion_tokens", 0)
+            elif hasattr(response, 'response_metadata') and hasattr(response.response_metadata, 'get'):
+                # Try alternative metadata structure
+                usage = response.response_metadata.get("token_usage", {})
+                state["cost_tokens"]["input"] += usage.get("prompt_tokens", 0)
+                state["cost_tokens"]["output"] += usage.get("completion_tokens", 0)
             
         except Exception as e:
-            state["error"] = f"Nudge generation error: {str(e)}"
-            state["nudge"] = "I'm here to help! How can I assist you today?"
+            import traceback
+            error_msg = f"Nudge generation error: {str(e)}\n{traceback.format_exc()}"
+            print(f"ERROR in _generate_nudge: {error_msg}")  # Debug output
+            state["error"] = error_msg
+            state["nudge"] = f"Error generating nudge: {str(e)}"
         
         latency_ms = (time.perf_counter() - start_time) * 1000
         state["latency_breakdown"]["nudge_generation"] = latency_ms

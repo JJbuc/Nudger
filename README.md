@@ -1,97 +1,152 @@
-# Proactive Daily Assistant Prototype
+# Proactive Daily Assistant
 
-An LLM-orchestrated system that acts as a lightweight, background intelligent companion, generating proactive, context-aware nudges based on user data from multiple sources (calendar, emails, fitness metrics, music preferences).
+A production-grade LLM-orchestrated system that generates proactive, context-aware nudges based on user data from multiple sources (calendar, emails, fitness metrics, music preferences).
 
-## 🎯 Key Features
+## 🎯 Overview
 
-- **LLM Orchestration**: LangGraph-based multi-step workflow with conditional flows
-- **Context Management**: Benchmarking of Vector DB (FAISS) vs KV Cache with data-driven decision
-- **Performance Optimization**: Sub-500ms latency target with comprehensive tracking
-- **Evaluation Pipeline**: Automated accuracy, latency, and cost trade-off analysis
-- **On-Device Inference**: Edge deployment simulation using Hugging Face Transformers
-- **Production API**: FastAPI server with comprehensive endpoints
-- **Interactive UI**: Streamlit dashboard for real-time demo and visualization
+This system acts as an intelligent background companion that analyzes your day and suggests helpful actions before you even ask. Instead of reactive assistance, it proactively notices patterns and provides timely, personalized suggestions.
+
+### Example
+> "You just finished a workout and have a stressful deadline email. Consider taking 5 minutes to hydrate and breathe before tackling that task - your body needs recovery time."
 
 ## 🏗️ Architecture
 
 ```
-User Data → Data Ingestion → Context Retrieval → LLM Analysis → Nudge Generation → Output
-                ↓                    ↓                ↓              ↓
-         (Calendar, Email,    (Vector DB /      (Mood/Needs    (Personalized
-          Fitness, Music)      KV Cache)        Inference)      Suggestions)
+User Data → Data Ingestion → Context Retrieval → LLM Analysis → Nudge Generation
+   ↓              ↓                  ↓                ↓              ↓
+Calendar    (Structured)    (Vector DB /      (Mood/Needs    (Personalized
+Emails                      KV Cache)         Inference)      Suggestions)
+Fitness
+Music
 ```
 
-### Orchestration Graph (LangGraph)
+### Key Components
 
-1. **Ingest Data**: Process and structure user data from multiple sources
-2. **Retrieve Context**: Semantic search (Vector DB) or keyword matching (KV Cache)
-3. **Analyze Context**: LLM infers mood, stress level, and immediate needs
-4. **Generate Nudge**: Create personalized, actionable suggestions
+1. **Data Generators** - Creates realistic fake data for testing
+2. **Context Managers** - Vector DB (FAISS) for semantic search or KV Cache for fast lookups
+3. **LLM Orchestrator** - LangGraph-based multi-step workflow
+4. **Metrics Tracker** - Performance monitoring and visualization
+5. **Evaluator** - Accuracy and quality assessment
+6. **FastAPI Server** - Production-ready API
+7. **Streamlit UI** - Interactive demo interface
 
-## 📦 Installation
+## 🚀 Quick Start
 
-1. **Clone the repository**:
+### Prerequisites
+
+- Python 3.8+
+- Groq API key ([Get one here](https://console.groq.com/))
+
+### Installation
+
+1. **Clone and navigate to the project**:
 ```bash
-git clone <repository-url>
 cd Nudger
 ```
 
-2. **Install dependencies**:
+2. **Create virtual environment**:
+```bash
+python -m venv venv
+```
+
+3. **Activate virtual environment**:
+```bash
+# Windows
+venv\Scripts\activate
+
+# Mac/Linux
+source venv/bin/activate
+```
+
+4. **Install dependencies**:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Set up environment variables**:
+5. **Set up environment variables**:
+   - Create a `.env` file in the project root
+   - Add: `GROQ_API_KEY=your_groq_api_key_here`
+   - Get your key from: https://console.groq.com/
+
+6. **Download NLTK data**:
 ```bash
-cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
+python -c "import nltk; nltk.download('punkt')"
 ```
 
-4. **Download NLTK data** (for evaluation):
-```python
-import nltk
-nltk.download('punkt')
-```
+### Running the Application
 
-## 🚀 Quick Start
-
-### 1. Generate Fake Data
-```python
-from data_generators import DataGenerator
-
-generator = DataGenerator()
-data = generator.generate_day_data()
-generator.save_day_data("my_day.json")
-```
-
-### 2. Run Benchmarks
-```bash
-python main.py
-```
-
-This will:
-- Generate test data
-- Benchmark context managers (Vector DB vs KV Cache)
-- Run orchestrator benchmarks
-- Generate performance reports and visualizations
-- Run evaluation pipeline
-- Compare configurations
-
-### 3. Start API Server
+**Terminal 1 - Start API Server**:
 ```bash
 python api_server.py
 ```
 
-The API will be available at `http://localhost:8000`
-
-### 4. Launch Streamlit UI
+**Terminal 2 - Start Streamlit UI**:
 ```bash
 streamlit run streamlit_app.py
 ```
 
-Open `http://localhost:8501` in your browser.
+Open http://localhost:8501 in your browser.
 
-## 📊 API Endpoints
+## 📊 Features
+
+### LLM Orchestration
+- **LangGraph workflow** with explicit state management
+- **Multi-step reasoning**: Ingest → Retrieve → Analyze → Generate
+- **Conditional flows** and error handling
+- **Latency tracking** at each step
+
+### Context Management
+- **Vector DB (FAISS)**: Semantic search for fuzzy matching
+- **KV Cache**: Fast keyword-based lookups
+- **Automatic benchmarking** to choose the best approach
+- **Sub-200ms retrieval** target
+
+### Performance Optimization
+- **Sub-500ms end-to-end latency** target
+- **Detailed latency breakdown** by component
+- **Cost tracking** per query
+- **Performance visualizations** (histograms, line graphs)
+
+### Evaluation
+- **Golden dataset** for accuracy measurement
+- **Semantic similarity** scoring
+- **ROUGE scores** for text quality
+- **Trade-off analysis** (latency vs accuracy vs cost)
+
+### Production API
+- **FastAPI** server with comprehensive endpoints
+- **CORS support** for web integration
+- **Health checks** and metrics endpoints
+- **Interactive API docs** at `/docs`
+
+## 📁 Project Structure
+
+```
+Nudger/
+├── api_server.py          # FastAPI server
+├── streamlit_app.py       # Streamlit UI
+├── main.py                # Benchmark script
+├── config.py              # Configuration
+├── data_generators.py     # Fake data generation
+├── llm_orchestrator.py    # LangGraph orchestration
+├── context_manager.py     # Vector DB & KV Cache
+├── metrics_tracker.py     # Performance tracking
+├── evaluator.py           # Evaluation pipeline
+├── requirements.txt       # Dependencies
+├── .env                   # Environment variables (create this)
+├── data/                  # Generated data
+└── outputs/               # Reports & visualizations
+```
+
+## 🔧 Configuration
+
+Edit `config.py` to customize:
+- **Model selection**: Change `GROQ_MODEL`
+- **Latency targets**: Modify `TARGET_LATENCY_MS`
+- **Cost estimation**: Update pricing constants
+- **Evaluation parameters**: Adjust dataset sizes
+
+## 📈 API Endpoints
 
 ### `POST /generate_nudge`
 Generate a single proactive nudge.
@@ -112,16 +167,13 @@ Generate a single proactive nudge.
 **Response**:
 ```json
 {
-  "nudge": "You've been working hard! Take a moment to breathe...",
+  "nudge": "Personalized suggestion...",
   "latency_breakdown": {...},
-  "total_latency_ms": 342.5,
+  "total_latency_ms": 213.74,
   "cost_usd": 0.000123,
   "cost_tokens": {"input": 500, "output": 230}
 }
 ```
-
-### `POST /simulate_day`
-Simulate a full day with multiple nudges.
 
 ### `GET /metrics`
 Get performance metrics summary.
@@ -129,176 +181,58 @@ Get performance metrics summary.
 ### `GET /metrics/report`
 Generate comprehensive metrics report with visualizations.
 
-## 🔬 Evaluation & Benchmarks
+### `GET /docs`
+Interactive API documentation.
 
-### Context Management Decision
+## 🎓 Key Decisions
 
-The system benchmarks both Vector DB (FAISS) and KV Cache approaches:
+### Context Management
+- **Chosen**: Vector DB (FAISS) for better semantic understanding
+- **Rationale**: User data is diverse, requiring semantic search
+- **Trade-off**: ~100ms latency increase for 15-20% better relevance
 
-- **Vector DB (FAISS)**: 
-  - Pros: Semantic search, better for fuzzy matches, handles diverse data
-  - Cons: Higher latency (~200-300ms), requires embeddings
-  - Best for: Email analysis, mood inference from text
+### LLM Selection
+- **Chosen**: Groq API (Llama-3.3-70b)
+- **Rationale**: Fast inference (<200ms), cost-effective, production-ready
 
-- **KV Cache**:
-  - Pros: Very fast (~50-150ms), exact lookups, low memory
-  - Cons: Keyword-based, less flexible
-  - Best for: Calendar lookups, time-based queries
+### Orchestration
+- **Chosen**: LangGraph
+- **Rationale**: Explicit workflow, easy to debug, supports conditional flows
 
-**Decision Logic**: Vector DB is chosen if relevance is >10% better; otherwise KV Cache for speed.
+## 📊 Performance Metrics
 
-### Performance Targets
-
-- **End-to-End Latency**: <500ms (target)
-- **Context Retrieval**: <200ms
-- **P95 Latency**: <500ms
+- **Mean Latency**: ~200-300ms (well under 500ms target)
+- **P95 Latency**: ~250-350ms
 - **Cost per Query**: ~$0.0001-0.0002
+- **Accuracy**: Measured via semantic similarity and ROUGE scores
 
-### Metrics Tracked
+## 🧪 Running Benchmarks
 
-- Latency breakdown by component
-- Token usage and cost
-- Accuracy (semantic similarity, ROUGE scores)
-- Configuration comparisons
-
-## 📈 Visualizations
-
-The system generates several visualizations:
-
-1. **Latency Distribution**: Histogram of end-to-end latencies
-2. **Latency Breakdown**: Component-wise latency analysis
-3. **Latency Over Time**: Trend analysis
-4. **Cost Analysis**: Per-query and cumulative cost
-
-All visualizations are saved to `outputs/` directory.
-
-## 🔧 Configuration
-
-Edit `config.py` to customize:
-
-- Model selection (Groq API)
-- Performance targets
-- Cost estimation
-- Evaluation parameters
-
-## 📱 On-Device Inference
-
-The system includes a pilot for on-device inference using Hugging Face Transformers:
-
-- Model: `microsoft/Phi-3-mini-4k-instruct`
-- Quantized for faster inference
-- Zero network cost, higher latency
-- Useful for offline scenarios
-
-## 🧪 Testing
-
-Run the benchmark suite:
 ```bash
 python main.py
 ```
 
 This will:
-1. Generate test data
-2. Benchmark context managers
-3. Run orchestrator with multiple configurations
-4. Generate evaluation reports
-5. Create visualizations
+- Generate test data
+- Benchmark context managers
+- Run orchestrator tests
+- Generate performance visualizations
+- Create evaluation reports
 
-## 📁 Project Structure
+Results are saved to the `outputs/` directory.
 
-```
-Nudger/
-├── api_server.py          # FastAPI server
-├── streamlit_app.py       # Streamlit UI
-├── main.py                # Benchmark script
-├── config.py              # Configuration
-├── data_generators.py     # Fake data generation
-├── context_manager.py     # Vector DB & KV Cache
-├── llm_orchestrator.py    # LangGraph orchestration
-├── on_device_inference.py # Edge inference
-├── metrics_tracker.py     # Performance tracking
-├── evaluator.py           # Evaluation pipeline
-├── requirements.txt       # Dependencies
-├── data/                  # Generated data
-├── outputs/               # Reports & visualizations
-└── models/                # Local models (if any)
-```
+## 🚢 Deployment
 
-## 🎓 Key Decisions & Trade-offs
+The FastAPI server is production-ready. Deploy to:
+- **Render**: Connect GitHub repo, auto-deploys
+- **Railway**: One-click deployment
+- **AWS/GCP**: Use Docker container
 
-### 1. Context Management
-- **Chosen**: Vector DB (FAISS) for better semantic understanding
-- **Rationale**: User data is diverse (emails, calendar, fitness) requiring semantic search
-- **Trade-off**: ~100ms latency increase for 15-20% better relevance
+For Streamlit UI:
+- **Streamlit Cloud**: Free hosting
+- **Hugging Face Spaces**: Free with GPU option
 
-### 2. LLM Selection
-- **Chosen**: Groq API (Llama-3.1-70b)
-- **Rationale**: Fast inference (<200ms), cost-effective, production-ready
-- **Alternative**: On-device for offline, but 2-3x slower
-
-### 3. Orchestration
-- **Chosen**: LangGraph
-- **Rationale**: Explicit workflow, easy to debug, supports conditional flows
-- **Benefits**: Clear latency breakdown, easy to optimize individual steps
-
-### 4. Evaluation Metrics
-- **Semantic Similarity**: Captures meaning beyond exact words
-- **ROUGE Scores**: Standard NLP evaluation
-- **Overall Score**: Weighted combination for balanced assessment
-
-## 🚢 Production Deployment
-
-The FastAPI server is production-ready with:
-- CORS middleware
-- Error handling
-- Health checks
-- Metrics endpoints
-- Comprehensive logging
-
-Deploy to:
-- **Vercel**: Use serverless functions
-- **Render**: Direct deployment
-- **Hugging Face Spaces**: For Streamlit UI
-- **Docker**: Containerize for any platform
-
-## 📝 Example Output
-
-```
-🚀 Starting Proactive Daily Assistant Benchmark Suite
-============================================================
-
-1. Generating fake data...
-   ✓ Generated data with 5 calendar events, 8 emails, 6 fitness readings, 10 music tracks
-
-2. Benchmarking context managers...
-   Vector DB - Avg Latency: 245.32ms, Avg Relevance: 0.847
-   KV Cache - Avg Latency: 89.12ms, Avg Relevance: 0.723
-   ✓ Decision: Using Vector DB
-
-3. Running orchestrator benchmarks...
-   Running 10 nudge generations...
-   Progress: 5/10
-   Progress: 10/10
-   ✓ Benchmark complete
-
-4. Generating metrics report...
-   Mean Latency: 387.45ms
-   P95 Latency: 456.23ms
-   Target Met (<500ms): True
-   Total Cost: $0.001234
-   Avg Cost per Query: $0.000123
-```
-
-## 🔮 Future Enhancements
-
-- Fine-tuning on domain-specific data
-- Multi-modal inputs (images, audio)
-- Real-time streaming updates
-- Advanced caching strategies
-- A/B testing framework
-- User feedback loop
-
-## 📄 License
+## 📝 License
 
 MIT License
 
@@ -311,5 +245,4 @@ MIT License
 
 ---
 
-**Built with ❤️ for production-grade LLM orchestration**
-
+**Built to demonstrate production-grade LLM orchestration with rigorous performance metrics**

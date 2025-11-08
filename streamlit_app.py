@@ -8,7 +8,6 @@ import time
 from data_generators import DataGenerator
 from metrics_tracker import MetricsTracker
 from evaluator import Evaluator
-from on_device_inference import OnDeviceInference
 import config
 
 # Page config
@@ -25,8 +24,6 @@ if "metrics_tracker" not in st.session_state:
     st.session_state.metrics_tracker = MetricsTracker()
 if "evaluator" not in st.session_state:
     st.session_state.evaluator = Evaluator()
-if "on_device" not in st.session_state:
-    st.session_state.on_device = None  # Lazy load
 
 API_URL = "http://localhost:8000"
 
@@ -43,11 +40,10 @@ use_vector_db = st.sidebar.radio(
 use_vector_db_bool = use_vector_db == "Vector DB (FAISS)"
 
 # Tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Generate Nudges",
     "📈 Metrics & Performance",
     "🔬 Evaluation",
-    "📱 On-Device Inference",
     "📚 About"
 ])
 
@@ -70,7 +66,7 @@ with tab1:
     
     with col2:
         st.subheader("2. Generate Nudge")
-        if st.button("Generate Nudge", type="primary"):
+        if st.button("Generate Nudge"):
             if "current_data" not in st.session_state:
                 st.warning("Please generate data first!")
             else:
@@ -261,38 +257,8 @@ with tab3:
             except Exception as e:
                 st.error(f"Evaluation error: {str(e)}")
 
-# Tab 4: On-Device Inference
+# Tab 4: About
 with tab4:
-    st.header("On-Device Inference Pilot")
-    
-    st.info("This simulates edge deployment using a local model (Phi-3-mini)")
-    
-    if st.button("Load On-Device Model"):
-        with st.spinner("Loading model (this may take a minute)..."):
-            try:
-                if st.session_state.on_device is None:
-                    st.session_state.on_device = OnDeviceInference()
-                st.success("Model loaded!")
-            except Exception as e:
-                st.error(f"Error loading model: {str(e)}")
-    
-    if st.session_state.on_device and st.session_state.on_device.pipeline:
-        context = st.text_area("Context", "Email: Feeling stressed about deadline. Fitness: Just finished workout.")
-        analysis = st.text_area("Analysis", "User is stressed and just finished a workout.")
-        
-        if st.button("Generate Nudge (On-Device)"):
-            with st.spinner("Generating..."):
-                result = st.session_state.on_device.generate_nudge(context, analysis)
-                
-                st.success("Generated!")
-                st.info(f"💬 **{result['nudge']}**")
-                st.metric("Latency", f"{result['latency_ms']:.2f}ms")
-                st.metric("Tokens", result['tokens'])
-    else:
-        st.warning("On-device model not loaded. Click 'Load On-Device Model' first.")
-
-# Tab 5: About
-with tab5:
     st.header("About")
     st.markdown("""
     ## Proactive Daily Assistant Prototype
@@ -305,7 +271,6 @@ with tab5:
     - **Context Management**: Vector DB (FAISS) vs KV Cache benchmarking
     - **Performance**: Sub-500ms latency target with detailed tracking
     - **Evaluation**: Automated accuracy, latency, and cost trade-off analysis
-    - **On-Device Inference**: Edge deployment simulation
     - **Production API**: FastAPI server with comprehensive endpoints
     
     ### Architecture:

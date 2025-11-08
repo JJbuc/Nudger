@@ -131,13 +131,13 @@ class Evaluator:
         
         # Aggregate statistics
         return {
-            "mean_semantic_similarity": np.mean([r["semantic_similarity"] for r in results]),
-            "mean_rouge1": np.mean([r["rouge1"] for r in results]),
-            "mean_rouge2": np.mean([r["rouge2"] for r in results]),
-            "mean_rougeL": np.mean([r["rougeL"] for r in results]),
-            "mean_overall_score": np.mean([r["overall_score"] for r in results]),
-            "mean_latency_ms": np.mean([r["latency_ms"] for r in results]),
-            "mean_cost_usd": np.mean([r["cost_usd"] for r in results]),
+            "mean_semantic_similarity": float(np.mean([r["semantic_similarity"] for r in results])),
+            "mean_rouge1": float(np.mean([r["rouge1"] for r in results])),
+            "mean_rouge2": float(np.mean([r["rouge2"] for r in results])),
+            "mean_rougeL": float(np.mean([r["rougeL"] for r in results])),
+            "mean_overall_score": float(np.mean([r["overall_score"] for r in results])),
+            "mean_latency_ms": float(np.mean([r["latency_ms"] for r in results])),
+            "mean_cost_usd": float(np.mean([r["cost_usd"] for r in results])),
             "total_queries": len(results),
             "individual_results": results
         }
@@ -150,12 +150,12 @@ class Evaluator:
             eval_results = self.batch_evaluate(results)
             comparison[config_name] = {
                 "accuracy": {
-                    "semantic_similarity": eval_results.get("mean_semantic_similarity", 0),
-                    "rougeL": eval_results.get("mean_rougeL", 0),
-                    "overall": eval_results.get("mean_overall_score", 0)
+                    "semantic_similarity": float(eval_results.get("mean_semantic_similarity", 0)),
+                    "rougeL": float(eval_results.get("mean_rougeL", 0)),
+                    "overall": float(eval_results.get("mean_overall_score", 0))
                 },
-                "latency_ms": eval_results.get("mean_latency_ms", 0),
-                "cost_usd": eval_results.get("mean_cost_usd", 0)
+                "latency_ms": float(eval_results.get("mean_latency_ms", 0)),
+                "cost_usd": float(eval_results.get("mean_cost_usd", 0))
             }
         
         return comparison
