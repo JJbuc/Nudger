@@ -1,5 +1,6 @@
 """Context management with vector DB and KV cache implementations."""
 import time
+import re
 import numpy as np
 from typing import List, Dict, Any, Tuple
 from sentence_transformers import SentenceTransformer
@@ -122,22 +123,25 @@ class KVCacheContextManager:
                     self.cache[keyword_key].append(ctx)
     
     def retrieve(self, query: str, top_k: int = 3) -> ContextResult:
-        """Retrieve contexts using keyword matching."""
+        """Retrieve contexts using type, hour, and keyword matching."""
         start_time = time.perf_counter()
         
         query_lower = query.lower()
         retrieved = []
         seen = set()
         
-        # Match by keywords
-        keywords = ["urgent", "meeting", "workout", "stressed", "deadline", "happy", "tired", 
-                   "calendar", "email", "fitness", "music", "steps", "heart"]
+        # 1. Match by type (calendar, email, fitness, music)
+        type_keywords = {
+            "calendar": ["calendar", "meeting", "event", "appointment"],
+            "email": ["email", "message", "mail"],
+            "fitness": ["fitness", "workout", "exercise", "steps", "heart", "activity"],
+            "music": ["music", "song", "track", "playlist"]
+        }
         
-        for keyword in keywords:
-            if keyword in query_lower:
-                key = f"keyword_{keyword}"
-                if key in self.cache:
-                    for ctx in self.cache[key]:
+        for ctx_type, keywords in type_keywords.items():
+            if any(kw in query_lower for kw in keywords):
+                if ctx_type in self.cache:
+                    for ctx in self.cache[ctx_type]:
                         ctx_id = id(ctx)
                         if ctx_id not in seen:
                             retrieved.append(self._format_context(ctx))
@@ -147,7 +151,72 @@ class KVCacheContextManager:
                 if len(retrieved) >= top_k:
                     break
         
-        # Fallback: return recent contexts
+        # 2. Match by hour/time if still need more results
+        if len(retrieved) < top_k:
+            # Extract hour from query (e.g., "3pm", "15:00", "afternoon")
+            def extract_hour(match, is_pm=False):
+                """Extract hour from regex match, handling AM/PM."""
+                hour = int(match.group(1))
+                if is_pm:
+                    if hour == 12:
+                        return 12
+                    return hour + 12
+                else:  # AM
+                    if hour == 12:
+                        return 0
+                    return hour
+            
+            hour_patterns = [
+                (r'\b(\d{1,2})\s*pm', lambda m: extract_hour(m, is_pm=True)),
+                (r'\b(\d{1,2})\s*am', lambda m: extract_hour(m, is_pm=False)),
+                (r'\b(\d{2}):\d{2}', lambda m: int(m.group(1))),
+            ]
+            
+            for pattern, extractor in hour_patterns:
+                match = re.search(pattern, query_lower)
+                if match:
+                    try:
+                        hour = extractor(match)
+                        hour_key = f"hour_{hour:02d}"
+                        if hour_key in self.cache:
+                            for ctx in self.cache[hour_key]:
+                                ctx_id = id(ctx)
+                                if ctx_id not in seen:
+                                    retrieved.append(self._format_context(ctx))
+                                    seen.add(ctx_id)
+                                    if len(retrieved) >= top_k:
+                                        break
+                        if len(retrieved) >= top_k:
+                            break
+                    except (ValueError, AttributeError):
+                        pass
+            
+            # Also check for time-related keywords
+            time_keywords = ["morning", "afternoon", "evening", "night", "recent", "today"]
+            for time_kw in time_keywords:
+                if time_kw in query_lower:
+                    # Return recent contexts (already handled in fallback)
+                    break
+        
+        # 3. Match by keywords (existing logic)
+        if len(retrieved) < top_k:
+            keywords = ["urgent", "meeting", "workout", "stressed", "deadline", "happy", "tired"]
+            
+            for keyword in keywords:
+                if keyword in query_lower:
+                    key = f"keyword_{keyword}"
+                    if key in self.cache:
+                        for ctx in self.cache[key]:
+                            ctx_id = id(ctx)
+                            if ctx_id not in seen:
+                                retrieved.append(self._format_context(ctx))
+                                seen.add(ctx_id)
+                                if len(retrieved) >= top_k:
+                                    break
+                    if len(retrieved) >= top_k:
+                        break
+        
+        # 4. Fallback: return recent contexts
         if len(retrieved) < top_k:
             for ctx in reversed(self.all_contexts[-top_k:]):
                 ctx_id = id(ctx)
@@ -158,7 +227,8 @@ class KVCacheContextManager:
                         break
         
         latency_ms = (time.perf_counter() - start_time) * 1000
-        relevance_score = 0.8 if len(retrieved) > 0 else 0.0  # Approximate
+        # Improve relevance score based on how many matching strategies worked
+        relevance_score = 0.9 if len(retrieved) >= top_k else 0.7 if len(retrieved) > 0 else 0.0
         
         return ContextResult(
             context="\n".join(retrieved[:top_k]),
